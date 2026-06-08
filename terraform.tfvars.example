@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+
+proxmox_endpoint = "https://192.168.0.200:8006/"
+
+# Scoped least-privilege token: USER@REALM!TOKENID=SECRET
+# Create with: pveum user token add terraform@pve tf --privsep 0
+proxmox_api_token = "terraform@pve!tf=00000000-0000-0000-0000-000000000000"
+
+# SSH public key(s) injected into provisioned VMs
+ssh_public_keys = [
+  "ssh-ed25519 AAAA... claude@homelab",
+]

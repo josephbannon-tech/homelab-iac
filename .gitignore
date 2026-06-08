@@ -1,0 +1,16 @@
+# OpenTofu / Terraform
+.terraform/
+# NOTE: .terraform.lock.hcl IS committed on purpose (pins provider versions/hashes)
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Secrets — real values live here, only the .example is committed
+terraform.tfvars
+*.auto.tfvars
+*.tfvars.json
+
+# Editor / OS
+*.swp
+.DS_Store
