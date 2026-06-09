@@ -28,15 +28,22 @@ terraform.tfvars.example
   pveum role add Terraform -privs "VM.Allocate VM.Audit VM.Clone \
     VM.Config.CDROM VM.Config.CPU VM.Config.Cloudinit VM.Config.Disk \
     VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options \
-    VM.Monitor VM.PowerMgmt Datastore.Allocate Datastore.AllocateSpace \
+    VM.GuestAgent.Audit VM.PowerMgmt Datastore.Allocate Datastore.AllocateSpace \
     Datastore.AllocateTemplate Datastore.Audit SDN.Use Sys.Audit"
   pveum user add terraform@pve
   pveum aclmod / -user terraform@pve -role Terraform
   pveum user token add terraform@pve tf --privsep 0
   ```
 
-  The token grants only what VM provisioning needs — no `Sys.PowerMgmt`, no realm
-  or user management, no root.
+  The token grants only what VM provisioning needs — no `Sys.Modify`/`Sys.PowerMgmt`,
+  no realm or user management, no root. (`VM.GuestAgent.Audit` lets the provider read
+  a VM's IP back from the guest agent; without it the apply still succeeds but
+  `*_ipv4` outputs come back empty.)
+
+  Two operations sit outside the API token: bpg imports the cloud image over **root
+  SSH** to the node (configure the provider `ssh {}` block), and the Debian image
+  itself is staged once to `local:import/` outside Terraform (the URL-download API
+  needs `Sys.Modify`, deliberately omitted).
 
 ## Usage
 

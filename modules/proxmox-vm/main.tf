@@ -22,7 +22,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   agent {
-    enabled = true
+    enabled = var.agent_enabled
   }
 
   cpu {

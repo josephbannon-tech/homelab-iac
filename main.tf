@@ -1,14 +1,12 @@
 # ---- Golden image: Debian 13 cloud-init template, as code ---------------------
 
-# Pull the Debian 13 generic cloud image onto the node's `local` storage.
-resource "proxmox_download_file" "debian13" {
-  content_type = "import"
-  datastore_id = "local"
-  node_name    = var.proxmox_node
-  url          = var.debian13_image_url
-  file_name    = "debian-13-genericcloud-amd64.qcow2"
-  overwrite    = false
-}
+# The Debian 13 generic cloud image is staged once on the node's `local` import
+# storage (outside Terraform, to keep the API token minimal — the URL download
+# endpoint needs Sys.Modify, which the scoped terraform@pve token deliberately
+# lacks). Re-stage with:
+#   curl -fsSL -o /var/lib/vz/import/debian-13-genericcloud-amd64.qcow2 \
+#     "$debian13_image_url"   # see var.debian13_image_url
+# The template below imports it; bpg does the disk import over SSH/sudo.
 
 # A stopped template VM that imports that image. Clones inherit the disk + agent
 # + cloud-init drive; each clone injects its own user/keys/network via cloud-init.
@@ -39,7 +37,7 @@ resource "proxmox_virtual_environment_vm" "debian13_template" {
 
   disk {
     datastore_id = "local-lvm"
-    import_from  = proxmox_download_file.debian13.id
+    import_from  = var.template_image_file_id
     interface    = "scsi0"
     discard      = "on"
     size         = 20

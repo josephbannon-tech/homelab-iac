@@ -91,3 +91,9 @@ variable "on_boot" {
   type        = bool
   default     = false
 }
+
+variable "agent_enabled" {
+  description = "Enable QEMU guest-agent integration (lets the provider read VM IPs back). Keep false unless the image actually runs qemu-guest-agent — otherwise bpg waits up to its agent timeout on every plan/refresh. The Debian genericcloud image does NOT ship the agent; install it via cloud-init (phase 2) before setting this true."
+  type        = bool
+  default     = false
+}

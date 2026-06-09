@@ -18,9 +18,15 @@ variable "proxmox_insecure" {
 }
 
 variable "proxmox_ssh_username" {
-  description = "SSH user on the Proxmox node for bpg operations that need it"
+  description = "SSH user on the Proxmox node for bpg operations that need it (root: clean disk-import path)"
   type        = string
-  default     = "claude"
+  default     = "root"
+}
+
+variable "proxmox_ssh_private_key_path" {
+  description = "Path to the passphraseless SSH private key bpg uses to reach the node"
+  type        = string
+  default     = "~/.ssh/id_ed25519"
 }
 
 variable "proxmox_node" {
@@ -32,9 +38,15 @@ variable "proxmox_node" {
 # ---- Golden template ----------------------------------------------------------
 
 variable "debian13_image_url" {
-  description = "URL of the Debian 13 generic cloud image (qcow2)"
+  description = "Source URL for the Debian 13 cloud image (staged on the node outside TF; see main.tf)"
   type        = string
   default     = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
+}
+
+variable "template_image_file_id" {
+  description = "Proxmox volume ID of the pre-staged cloud image to import into the template"
+  type        = string
+  default     = "local:import/debian-13-genericcloud-amd64.qcow2"
 }
 
 variable "template_vm_id" {
