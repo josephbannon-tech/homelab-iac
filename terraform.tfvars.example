@@ -10,3 +10,12 @@ proxmox_api_token = "terraform@pve!tf=00000000-0000-0000-0000-000000000000"
 ssh_public_keys = [
   "ssh-ed25519 AAAA... claude@homelab",
 ]
+
+# Reusable pre-authorized Tailscale auth key (no tags on a personal tailnet).
+# Mint at https://login.tailscale.com/admin/settings/keys or via the API.
+# Leave "" to skip the tailnet join.
+tailscale_auth_key = "tskey-auth-..."
+
+# Pi-hole web/API password for local-DNS registration.
+# Alternative: leave unset here and export PIHOLE_PASSWORD instead.
+pihole_password = "..."

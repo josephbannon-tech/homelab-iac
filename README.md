@@ -6,16 +6,38 @@ golden image. Codifies the convention the estate previously applied by hand
 cloud-init drive, q35) into a reusable module, proven end-to-end on a disposable
 VM.
 
+A provisioned VM comes up as a finished network citizen, not just a booted OS:
+cloud-init **vendor-data** installs the QEMU guest agent (so Terraform reads the
+VM's real IP back and outputs are populated), joins the machine to the tailnet
+with a pre-authorized auth key, and the plan registers a Pi-hole local-DNS
+record for statically-addressed VMs. `tofu destroy` unwinds the DNS record with
+the VM.
+
 ## Layout
 
 ```
-versions.tf            # OpenTofu + bpg/proxmox provider constraints
-providers.tf           # Proxmox provider (token auth, SSH for image import)
+versions.tf            # OpenTofu + provider constraints (bpg/proxmox, pihole)
+providers.tf           # Proxmox (token auth, SSH for image import) + Pi-hole
 variables.tf           # connection + shared inputs
-main.tf                # golden Debian 13 template (download + import) + a test VM
+main.tf                # golden Debian 13 template + a test VM + its DNS record
 outputs.tf
-modules/proxmox-vm/    # reusable "clone the template + cloud-init" module
+modules/proxmox-vm/    # reusable "clone + cloud-init + vendor-data" module
 terraform.tfvars.example
+```
+
+## Why vendor-data (the cloud-init layering)
+
+Proxmox generates the cloud-init **user-data** itself (user account, SSH keys,
+hostname, network from the `initialization {}` block). Overriding user-data via
+`cicustom` replaces all of that, so this repo doesn't. Instead the module
+renders a per-VM **vendor-data** snippet, which cloud-init *merges* alongside
+the Proxmox-generated user-data: per-machine identity stays provider-managed,
+and vendor-data carries only the estate baseline (guest agent, tailnet join).
+Snippet upload is an SSH operation (the Proxmox API has no snippets endpoint),
+and the target datastore must list `snippets` in its content types:
+
+```sh
+pvesm set local --content backup,vztmpl,snippets,iso,import
 ```
 
 ## Prerequisites
@@ -59,9 +81,25 @@ make destroy
 State is local and gitignored, as is `terraform.tfvars`. Only
 `terraform.tfvars.example` is committed.
 
+## Estate integration (phase 2)
+
+- **Tailscale**: vendor-data installs Tailscale and runs
+  `tailscale up --auth-key=...` on first boot with a **reusable, pre-authorized**
+  auth key (`tailscale_auth_key`, gitignored tfvars; no tags on a personal
+  tailnet). Empty string skips the join. Note the rendered snippet is
+  root-readable on the Proxmox node — acceptable here, since node root already
+  owns every VM disk.
+- **Pi-hole DNS**: statically-addressed VMs get a `<name>.lan` A record via the
+  [`poindexter12/pihole`](https://search.opentofu.org/provider/poindexter12/pihole/latest)
+  provider (the Pi-hole v6 REST API fork available on the OpenTofu registry).
+  DHCP VMs already receive DHCP-derived names, so only static ones are
+  registered.
+- **Trade-off**: first boot now blocks on `apt update` + two package installs
+  (~2-3 min instead of ~40 s) before the agent answers and the apply returns.
+  Provisioning is rare; a VM that is *done* when the apply returns is worth it.
+
 ## Scope
 
-Milestone 1 is **VM provisioning only**. Tailscale auto-join and Pi-hole DNS
-registration are planned phase 2; importing the existing production VMs into
-state is a later, separate phase. OpenTofu only manages what is in its state —
-the template and the test VM — and never touches the hand-built production VMs.
+Importing the existing production VMs into state is a later, separate phase.
+OpenTofu only manages what is in its state — the template and the test VM — and
+never touches the hand-built production VMs.

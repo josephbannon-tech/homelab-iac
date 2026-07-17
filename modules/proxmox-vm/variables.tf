@@ -93,7 +93,20 @@ variable "on_boot" {
 }
 
 variable "agent_enabled" {
-  description = "Enable QEMU guest-agent integration (lets the provider read VM IPs back). Keep false unless the image actually runs qemu-guest-agent — otherwise bpg waits up to its agent timeout on every plan/refresh. The Debian genericcloud image does NOT ship the agent; install it via cloud-init (phase 2) before setting this true."
+  description = "Enable QEMU guest-agent integration (lets the provider read VM IPs back). The vendor-data baseline installs the agent on first boot, so this defaults true; set false only if you point the VM at an image/vendor-data without the agent — otherwise bpg waits up to its agent timeout on every plan/refresh."
   type        = bool
-  default     = false
+  default     = true
+}
+
+variable "tailscale_auth_key" {
+  description = "Reusable pre-authorized Tailscale auth key; the VM joins the tailnet on first boot. Empty string skips the join."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "snippets_datastore_id" {
+  description = "Datastore for the vendor-data snippet (must list 'snippets' in its content types)"
+  type        = string
+  default     = "local"
 }

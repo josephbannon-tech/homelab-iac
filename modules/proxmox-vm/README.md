@@ -4,6 +4,13 @@ Provisions one Proxmox VM by cloning a cloud-init golden template and configurin
 it via cloud-init (user + SSH keys, static-or-DHCP networking, DNS). Encapsulates
 the estate's VM convention so callers only specify what differs.
 
+Each VM also gets a rendered **vendor-data** snippet (uploaded per-VM to the
+snippets datastore over SSH) carrying the estate baseline: qemu-guest-agent
+installed + enabled on first boot, and, when `tailscale_auth_key` is set, a
+tailnet join via `tailscale up --auth-key=...`. Vendor-data is *merged* by
+cloud-init with the Proxmox-generated user-data, so the identity/network inputs
+below keep working unchanged.
+
 ## Usage
 
 ```hcl
@@ -35,6 +42,9 @@ module "example" {
 | `datastore_id` | `local-lvm` | **not** `local-lvm-m2` (faulty NVMe) |
 | `ip_address` | `dhcp` | CIDR for static, or `"dhcp"` |
 | `ssh_public_keys` | — | injected via cloud-init |
+| `tailscale_auth_key` | `""` | reusable pre-authorized key; empty skips the tailnet join |
+| `snippets_datastore_id` | `local` | must list `snippets` in its content types |
+| `agent_enabled` | `true` | vendor-data installs the agent; set false for agent-less images |
 
 ## Outputs
 

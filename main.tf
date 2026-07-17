@@ -59,11 +59,18 @@ resource "proxmox_virtual_environment_vm" "debian13_template" {
 }
 
 # ---- Test VM: proves the module end-to-end (create -> verify -> destroy) -------
+# Phase 2 shape: static IP + vendor-data baseline (guest agent + tailnet join)
+# + Pi-hole DNS registration.
+
+locals {
+  test_vm_name = "tf-test-02"
+  test_vm_ip   = "192.168.0.210"
+}
 
 module "test_vm" {
   source = "./modules/proxmox-vm"
 
-  name        = "tf-test-01"
+  name        = local.test_vm_name
   vm_id       = 110
   node_name   = var.proxmox_node
   template_id = proxmox_virtual_environment_vm.debian13_template.vm_id
@@ -74,8 +81,18 @@ module "test_vm" {
   memory    = 2048
   disk_size = 20
 
-  ip_address      = "dhcp"
+  ip_address      = "${local.test_vm_ip}/24"
+  ip_gateway      = "192.168.0.1"
   dns_servers     = var.dns_servers
   username        = var.vm_username
   ssh_public_keys = var.ssh_public_keys
+
+  tailscale_auth_key = var.tailscale_auth_key
+}
+
+# Statically-addressed VMs get a Pi-hole A record; DHCP VMs already receive a
+# DHCP-derived *.lan name, so only static ones need explicit registration.
+resource "pihole_dns_record" "test_vm" {
+  domain = "${local.test_vm_name}.lan"
+  ip     = local.test_vm_ip
 }

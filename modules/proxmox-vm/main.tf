@@ -2,6 +2,23 @@
 # cloud-init. Mirrors the estate's hand-built convention (virtio-scsi, host CPU,
 # local-lvm disk with discard, qemu-guest-agent, cloud-init drive, q35).
 
+# Estate-baseline vendor-data (qemu-guest-agent + optional tailnet join),
+# uploaded as a per-VM snippet. Snippet upload is an SSH operation (not API),
+# and the rendered file is root-readable on the node — the Tailscale auth key
+# transits both. The snippets datastore must list `snippets` in its content types.
+resource "proxmox_virtual_environment_file" "vendor_data" {
+  content_type = "snippets"
+  datastore_id = var.snippets_datastore_id
+  node_name    = var.node_name
+
+  source_raw {
+    file_name = "${var.name}-vendor-data.yaml"
+    data = templatefile("${path.module}/templates/vendor-data.yaml.tftpl", {
+      tailscale_auth_key = var.tailscale_auth_key
+    })
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "this" {
   name        = var.name
   description = var.description
@@ -53,6 +70,8 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   initialization {
     datastore_id = var.datastore_id
+
+    vendor_data_file_id = proxmox_virtual_environment_file.vendor_data.id
 
     ip_config {
       ipv4 {

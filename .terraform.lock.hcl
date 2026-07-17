@@ -22,3 +22,19 @@ provider "registry.opentofu.org/bpg/proxmox" {
     "zh:f26e0763dbe6a6b2195c94b44696f2110f7f55433dc142839be16b9697fa5597",
   ]
 }
+
+provider "registry.opentofu.org/poindexter12/pihole" {
+  version     = "1.1.1"
+  constraints = "~> 1.1"
+  hashes = [
+    "h1:hqKgp0OdqFt7PyDFS5rb8mtiWksrFvGWbWk2fpvvg0s=",
+    "zh:0a0f3a047e4d75fed40378c104c21d720e9c64429d098ea85880ad199da7955b",
+    "zh:1b436dba17b33ec8e14f0b4361736238dd79730dcf00e690c60f3c86706519ae",
+    "zh:1d30fbc6e524eadd1d6b58049319a8d0f570256eb671f07bcd1a22bb50138425",
+    "zh:775bd9cb0411c11bcb40646a60354e8346678c00e297bd0e1305c6dec834815f",
+    "zh:d73a28e11257da9e306b24410d633591b70a25441d2b87f4e3456121d2225d88",
+    "zh:f6c79fee557321744cc907bc89cf7e9616ef7c68443a6cdace6e7b88e1c7bab3",
+    "zh:f7470291ee38a53d6aa1b273e3fb36354030ec79a31ae22d127591e2a2eba8e6",
+    "zh:f944837be01e20be8f35f534f96408f11de45278fc709dd61351f6074f56ed76",
+  ]
+}

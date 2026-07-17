@@ -55,6 +55,27 @@ variable "template_vm_id" {
   default     = 9000
 }
 
+# ---- Estate integration: Tailscale + Pi-hole -----------------------------------
+
+variable "tailscale_auth_key" {
+  description = "Reusable pre-authorized Tailscale auth key injected into VMs via vendor-data (mint at https://login.tailscale.com/admin/settings/keys — no tags on a personal tailnet). Empty string skips the tailnet join."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "pihole_url" {
+  description = "Pi-hole (JBDNS01) base URL for local-DNS registration"
+  type        = string
+  default     = "http://192.168.0.205"
+}
+
+variable "pihole_password" {
+  description = "Pi-hole web/API password used to manage local DNS records"
+  type        = string
+  sensitive   = true
+}
+
 # ---- Shared VM inputs ---------------------------------------------------------
 
 variable "ssh_public_keys" {

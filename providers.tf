@@ -12,3 +12,10 @@ provider "proxmox" {
     private_key = file(pathexpand(var.proxmox_ssh_private_key_path))
   }
 }
+
+# Pi-hole (JBDNS01) — registers local DNS records for statically-addressed VMs,
+# alongside the DHCP-derived *.lan names Pi-hole already serves.
+provider "pihole" {
+  url      = var.pihole_url
+  password = var.pihole_password
+}

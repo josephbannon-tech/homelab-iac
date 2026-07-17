@@ -1,0 +1,14 @@
+#cloud-config
+# Rendered by OpenTofu (modules/proxmox-vm) and attached via Proxmox
+# `cicustom vendor=`. cloud-init MERGES vendor-data with the user-data Proxmox
+# generates, so per-VM identity (user, SSH keys, hostname, network) stays
+# provider-managed and this file carries only the estate baseline.
+package_update: true
+packages:
+  - qemu-guest-agent
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+%{ if tailscale_auth_key != "" ~}
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --auth-key='${tailscale_auth_key}'
+%{ endif ~}
