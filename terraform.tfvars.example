@@ -4,7 +4,6 @@ proxmox_endpoint = "https://192.168.0.200:8006/"
 
 # Scoped least-privilege token: USER@REALM!TOKENID=SECRET
 # Create with: pveum user token add terraform@pve tf --privsep 0
-proxmox_api_token = "terraform@pve!tf=00000000-0000-0000-0000-000000000000"
 
 # SSH public key(s) injected into provisioned VMs
 ssh_public_keys = [
@@ -14,8 +13,10 @@ ssh_public_keys = [
 # Reusable pre-authorized Tailscale auth key (no tags on a personal tailnet).
 # Mint at https://login.tailscale.com/admin/settings/keys or via the API.
 # Leave "" to skip the tailnet join.
-tailscale_auth_key = "tskey-auth-..."
 
 # Pi-hole web/API password for local-DNS registration.
 # Alternative: leave unset here and export PIHOLE_PASSWORD instead.
-pihole_password = "..."
+
+# Secrets (proxmox_api_token, tailscale_auth_key, pihole_password) are NOT set
+# here. They live encrypted in secrets.sops.tfvars.json (SOPS + age) and are
+# passed as a var-file by the Makefile targets. See README "Secrets".

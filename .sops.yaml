@@ -1,0 +1,7 @@
+# SOPS creation rules. One age recipient: the operator key on the operations
+# host (~/.config/sops/age/keys.txt, backed up with the host's secrets and in
+# the off-site seed). Add a second recipient here before a second operator
+# needs to run plans; re-encrypt with `sops updatekeys`.
+creation_rules:
+  - path_regex: secrets\.sops\.tfvars\.json$
+    age: age1svuugztt32ptre9wcd26ydfazdyg6fp756gkdr7frwwkwpz3l4sqc5qjzg

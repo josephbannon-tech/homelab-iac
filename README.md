@@ -78,8 +78,38 @@ make apply
 make destroy
 ```
 
-State is local and gitignored, as is `terraform.tfvars`. Only
-`terraform.tfvars.example` is committed.
+State is local and gitignored, as is `terraform.tfvars` (non-secret values
+only since 2026-10-01). Only `terraform.tfvars.example` is committed.
+
+## Secrets: SOPS + age (2026-10-01)
+
+The three sensitive variables (`proxmox_api_token`, `tailscale_auth_key`,
+`pihole_password`) are committed **encrypted** in `secrets.sops.tfvars.json`,
+one value per key, ciphertext from [SOPS](https://github.com/getsops/sops) with
+an [age](https://age-encryption.org/) recipient (`.sops.yaml`). The Makefile
+targets wrap every plan and apply in `sops exec-file`, which decrypts to a
+private temp file for the lifetime of one command:
+
+```bash
+make plan            # sops exec-file secrets.sops.tfvars.json 'tofu plan -var-file={}'
+make secrets-edit    # opens the decrypted JSON in $EDITOR, re-encrypts on save
+make secrets-check   # fails if any value is not an ENC[...] ciphertext (also CI)
+```
+
+Why file-level SOPS here and Sealed Secrets in the cluster repo: Sealed Secrets
+is the right shape where a controller decrypts at apply time inside the
+cluster; an OpenTofu run has no controller, it needs the values on the
+operator's machine for the duration of a plan. SOPS encrypts values and leaves
+keys readable, so a diff shows *which* secret changed without showing it.
+
+Key custody: the age private key lives on the operations host at
+`~/.config/sops/age/keys.txt` (0600), is included in that host's nightly
+secrets backup, and reaches off-site storage through the same seed. A second
+operator means a second recipient in `.sops.yaml` and `sops updatekeys`.
+
+Trade-off: `tofu plan` by hand no longer works without the var-file; the
+Makefile is the interface. That is the point: there is one way to run it, and
+it never leaves plaintext behind.
 
 ## Estate integration (phase 2)
 
