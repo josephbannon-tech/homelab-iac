@@ -94,3 +94,9 @@ variable "dns_servers" {
   type        = list(string)
   default     = ["192.168.0.205"]
 }
+
+variable "create_test_vm" {
+  description = "Create the disposable lifecycle test VM and its Pi-hole record. Off by default so the steady-state plan is clean."
+  type        = bool
+  default     = false
+}

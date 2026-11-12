@@ -61,6 +61,11 @@ resource "proxmox_virtual_environment_vm" "debian13_template" {
 # ---- Test VM: proves the module end-to-end (create -> verify -> destroy) -------
 # Phase 2 shape: static IP + vendor-data baseline (guest agent + tailnet join)
 # + Pi-hole DNS registration.
+#
+# Opt-in. The VM is disposable and is destroyed after each lifecycle run, so
+# declaring it unconditionally left every later plan wanting to re-create it.
+# With var.create_test_vm = false (the default) the steady-state plan is clean;
+# `make smoke-plan` / `make smoke-apply` turn it on for one run.
 
 locals {
   test_vm_name = "tf-test-02"
@@ -69,6 +74,7 @@ locals {
 
 module "test_vm" {
   source = "./modules/proxmox-vm"
+  count  = var.create_test_vm ? 1 : 0
 
   name        = local.test_vm_name
   vm_id       = 110
@@ -93,6 +99,7 @@ module "test_vm" {
 # Statically-addressed VMs get a Pi-hole A record; DHCP VMs already receive a
 # DHCP-derived *.lan name, so only static ones need explicit registration.
 resource "pihole_dns_record" "test_vm" {
+  count  = var.create_test_vm ? 1 : 0
   domain = "${local.test_vm_name}.lan"
   ip     = local.test_vm_ip
 }

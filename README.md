@@ -19,7 +19,7 @@ the VM.
 versions.tf            # OpenTofu + provider constraints (bpg/proxmox, pihole)
 providers.tf           # Proxmox (token auth, SSH for image import) + Pi-hole
 variables.tf           # connection + shared inputs
-main.tf                # golden Debian 13 template + a test VM + its DNS record
+main.tf                # golden Debian 13 template + an opt-in test VM and its DNS record
 outputs.tf
 modules/proxmox-vm/    # reusable "clone + cloud-init + vendor-data" module
 terraform.tfvars.example
@@ -72,11 +72,24 @@ pvesm set local --content backup,vztmpl,snippets,iso,import
 ```sh
 cp terraform.tfvars.example terraform.tfvars   # fill in endpoint, token, SSH key
 make init
-make plan       # review: creates the template + the test VM, nothing else
+make plan       # steady state: the template only; "No changes" once applied
 make apply
-# ... verify the test VM (ssh in, cloud-init status) ...
-make destroy
 ```
+
+The lifecycle smoke test is opt-in (`create_test_vm`, default `false`):
+
+```sh
+make smoke-plan    # adds the test VM + its Pi-hole record
+make smoke-apply
+# ... verify the test VM (ssh in, cloud-init status, tailnet, <name>.lan) ...
+make apply         # back to steady state: removes the VM and the record
+```
+
+The test VM was declared unconditionally at first. It is disposable, so after
+each run the code said "one VM" while the node had none, and every later plan
+proposed re-creating it. A plan that is never clean hides real drift, so the
+VM moved behind a flag: `make plan` now answers "does reality match the code",
+and the smoke test is a deliberate act.
 
 State is local and gitignored, as is `terraform.tfvars` (non-secret values
 only since 2026-10-01). Only `terraform.tfvars.example` is committed.
@@ -131,5 +144,5 @@ it never leaves plaintext behind.
 ## Scope
 
 Importing the existing production VMs into state is a later, separate phase.
-OpenTofu only manages what is in its state — the template and the test VM — and
-never touches the hand-built production VMs.
+OpenTofu only manages what is in its state (the template, plus the test VM
+during a smoke run) and never touches the hand-built production VMs.

@@ -4,10 +4,11 @@ output "template_vm_id" {
 }
 
 output "test_vm_id" {
-  value = module.test_vm.vm_id
+  description = "VMID of the test VM (null unless create_test_vm is set)"
+  value       = one(module.test_vm[*].vm_id)
 }
 
 output "test_vm_ipv4" {
-  description = "IPv4 of the test VM (from qemu-guest-agent once booted)"
-  value       = module.test_vm.ipv4_addresses
+  description = "IPv4 of the test VM, from qemu-guest-agent once booted (null unless create_test_vm is set)"
+  value       = one(module.test_vm[*].ipv4_addresses)
 }

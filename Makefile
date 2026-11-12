@@ -1,4 +1,4 @@
-.PHONY: init fmt validate plan apply destroy secrets-edit secrets-check
+.PHONY: init fmt validate plan apply destroy smoke-plan smoke-apply secrets-edit secrets-check
 
 # Secrets live encrypted in secrets.sops.tfvars.json (SOPS + age, see README).
 # `sops exec-file` decrypts to a private temp file for the duration of one
@@ -20,6 +20,14 @@ plan:
 
 apply:
 	$(WITH_SECRETS) 'tofu apply -input=false -var-file={}'
+
+# Lifecycle smoke test: the disposable test VM plus its Pi-hole record. A plain
+# `make apply` afterwards removes both again (create_test_vm defaults to false).
+smoke-plan:
+	$(WITH_SECRETS) 'tofu plan -input=false -var-file={} -var create_test_vm=true'
+
+smoke-apply:
+	$(WITH_SECRETS) 'tofu apply -input=false -var-file={} -var create_test_vm=true'
 
 destroy:
 	$(WITH_SECRETS) 'tofu destroy -input=false -var-file={}'
